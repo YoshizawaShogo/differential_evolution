@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["differential", "evolution", "DE"]
 
-homepage = "https://github.com/YoshizawaShogo/differential_evolution"
+repository = "https://github.com/YoshizawaShogo/differential_evolution"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
