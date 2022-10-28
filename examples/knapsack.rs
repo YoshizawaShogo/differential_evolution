@@ -18,6 +18,23 @@ pub struct Knapsack {
     pub capacity: usize
 }
 
+fn convert(items: &Vec<Item>, genes: &Vec<f32>) -> Vec<usize> {
+    let mut converted = Vec::with_capacity(genes.len());
+    
+    // [0.0, 1.0]の区間を(item.maximum_count + 1)で均等に割り、
+    // それぞれの区間を個数に変換する
+    for (item, gene) in items.iter().zip(genes) {
+        let per_count = 1.0 / (item.maximum_count + 1) as f32;
+        let mut count = (gene / per_count) as usize;
+        if count > item.maximum_count {
+            count = item.maximum_count;
+        }
+        converted.push(count);
+    }
+
+    converted
+}
+
 // 最低限必要な振舞いを定義
 // "f32"は"f64"にも変更可能だが、intには未対応
 // Define minimum required behavior
@@ -69,12 +86,8 @@ impl IndividualBaseEach<f32> for Knapsack
 
         let mut sum_value = 0.0;
         let mut sum_weight = 0.0;
-        for (item, num) in self.items.iter().zip(&self.genes) {
-            let per_count = 1.0 / (item.maximum_count + 1) as f32;
-            let mut count = (num / per_count) as usize;
-            if count > item.maximum_count {
-                count = item.maximum_count;
-            }
+        let counts = convert(&self.items, &self.genes);
+        for (item, count) in self.items.iter().zip(&counts) {
             sum_value -= (item.value * count) as f32;
             sum_weight += (item.weight * count) as f32;
         }
@@ -98,11 +111,15 @@ fn main() {
 
     println!("# The initial best individual");
     population.show_best_individual();
+    let counts = convert(&population.get_individual_best().items, &population.get_individual_best().genes);
+    println!("counts: {:?}", counts);
     
     // 進化
     // Evolve
     population.advance_epoch(100, "rand", 1, 0.5, 0.8);
 
-    println!("# The final best individual");
+    println!("\n# The final best individual");
     population.show_best_individual();
+    let counts = convert(&population.get_individual_best().items, &population.get_individual_best().genes);
+    println!("counts: {:?}", counts);
 }
