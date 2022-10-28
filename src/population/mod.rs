@@ -30,6 +30,7 @@ pub trait PopulationBaseInterface<TI, TF> {
     fn show_at(&self, index: usize);
     fn show_best_individual(&self);
     fn get_index_best(&self) -> usize;
+    fn get_individual_best(&self) -> &TI;
 }
 
 trait PopulationBaseEvolutionParts<TI, TF> {
@@ -103,6 +104,10 @@ impl<TP: PopulationBaseEach<TI, TF>,
 
     fn show_best_individual(&self) {
         self.get_individuals()[self.get_index_best()].show();
+    }
+
+    fn get_individual_best(&self) -> &TI {
+        &self.get_individuals()[self.get_index_best()]
     }
 }
 
