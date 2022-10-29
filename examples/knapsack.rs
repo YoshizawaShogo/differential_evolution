@@ -59,18 +59,18 @@ impl IndividualBaseEach<f32> for Knapsack
         Self { 
             genes: Vec::new(),
             items: vec![
-                Item { value: 10, weight: 1,  maximum_count: 2 },
-                Item { value: 9,  weight: 2,  maximum_count: 2 },
-                Item { value: 8,  weight: 3,  maximum_count: 2 },
-                Item { value: 7,  weight: 4,  maximum_count: 2 },
-                Item { value: 6,  weight: 5,  maximum_count: 2 },
-                Item { value: 5,  weight: 6,  maximum_count: 2 },
-                Item { value: 4,  weight: 7,  maximum_count: 2 },
-                Item { value: 3,  weight: 8,  maximum_count: 2 },
-                Item { value: 2,  weight: 9,  maximum_count: 2 },
-                Item { value: 1,  weight: 10, maximum_count: 2 },
+                Item { value: 10, weight: 1,  maximum_count: 10000 },
+                Item { value: 9,  weight: 2,  maximum_count: 10000 },
+                Item { value: 8,  weight: 3,  maximum_count: 10000 },
+                Item { value: 7,  weight: 4,  maximum_count: 10000 },
+                Item { value: 6,  weight: 5,  maximum_count: 10000 },
+                Item { value: 5,  weight: 6,  maximum_count: 10000 },
+                Item { value: 4,  weight: 7,  maximum_count: 10000 },
+                Item { value: 3,  weight: 8,  maximum_count: 10000 },
+                Item { value: 2,  weight: 9,  maximum_count: 10000 },
+                Item { value: 1,  weight: 10, maximum_count: 10000 },
             ],
-            capacity: 40
+            capacity: 111111
         }
     }
 
@@ -79,9 +79,8 @@ impl IndividualBaseEach<f32> for Knapsack
     // 今回は、"gene"に応じた個数の"Item"をKnapsackに入れると定義
     // "evaluate" should be implemented for each problem
     // An individual with a low evaluation value is defined as a good individual.
-    // This time, it is defined that the number of "Items" corresponding to "gene" is put into Knapsack
-    fn evaluate(&self) -> f32 {
-
+    // This time, it is defined that the number of "Items" corresponding to "gene" is put into Knapsack 
+    fn evaluate(&self) -> Vec<f32> {
         assert_eq!(self.items.len(), self.genes.len());
 
         let mut sum_value = 0.0;
@@ -92,22 +91,27 @@ impl IndividualBaseEach<f32> for Knapsack
             sum_weight += (item.weight * count) as f32;
         }
 
-        // "weight"制約違反
-        // "weight" constraint violation
+        let mut evaluation_values = Vec::new();
+
+        // "weight"制約
+        // "weight" constraint
         if sum_weight > self.capacity as f32{
-            // 競争に必ず負けるくらい大きな数値
-            // Big enough to beat the competition
-            sum_value = 100000.0;
+            evaluation_values.push(sum_weight);
+        } else {
+            evaluation_values.push(f32::MIN);
         }
 
-        sum_value
+        // "value"
+        evaluation_values.push(sum_value);
+
+        evaluation_values
     }
 }
 
 fn main() {
     // 今回は、引数"genes_len"は"item"の個数と等しくする必要がある
     // This time, the argument "genes_len" must equal the number of "items"
-    let mut population = BasePopulation::<Knapsack>::new_from_shape(20, 10);
+    let mut population = BasePopulation::<Knapsack>::new_from_shape(100, 10);
 
     println!("# The initial best individual");
     population.show_best_individual();
@@ -116,7 +120,7 @@ fn main() {
     
     // 進化
     // Evolve
-    population.advance_epoch(100, "rand", 1, 0.5, 0.8);
+    population.advance_epoch(1000, "rand", 1, 0.5, 0.5);
 
     println!("\n# The final best individual");
     population.show_best_individual();

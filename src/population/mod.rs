@@ -80,7 +80,7 @@ impl<TP: PopulationBaseEach<TI, TF>,
     }
 
     fn get_index_best(&self) -> usize {
-        let mut best_index: usize = 0;
+        let mut best_index = 0;
         let mut best_value = self.get_individuals()[0].evaluate();
 
         for (index, individual) in self.get_individuals().iter().enumerate() {

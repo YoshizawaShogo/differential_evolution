@@ -12,7 +12,7 @@ pub trait IndividualBaseEach<TF> {
     fn get_genes(&self) -> &Vec<TF>;
     fn set_genes(&mut self, genes: Vec<TF>);
     /// 評価値が低い個体が良個体であると定義
-    fn evaluate(&self) -> TF; 
+    fn evaluate(&self) -> Vec<TF>;
 }
 
 pub trait IndividualBaseInterface<TF: Float> {
@@ -84,12 +84,20 @@ where Standard: Distribution<TF>
     /// 評価値が小さい個体の方が良い個体と定義
 
     fn compete(&self, another: Self) -> Self {
-        if self.evaluate() > another.evaluate() {
-            another
-        } else {
-            self.clone()
+        let self_values = self.evaluate();
+        let another_values = another.evaluate();
+
+        for (self_value, another_value) in self_values.iter().zip(&another_values) {
+            if self_value > another_value {
+                return another;
+            } else if self_value < another_value {
+                return self.clone();
+            }
         }
+
+        self.clone()
     }
+    
 }
 
 // TODO: Comment, inlineなどを使った高速化

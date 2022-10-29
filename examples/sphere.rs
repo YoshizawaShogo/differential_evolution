@@ -39,12 +39,13 @@ impl IndividualBaseEach<f32> for Sphere
     // "evaluate" should be implemented for each problem
     // An individual with a low evaluation value is defined as a good individual.
     // This time, the optimal solution is when all "gene" are 0.5
-    fn evaluate(&self) -> f32 {
+    fn evaluate(&self) -> Vec<f32> {
         let mut sum = 0.0;
         for num in self.get_genes().iter() {
             sum += (num-0.5).powi(2);
         }
-        sum
+        let values = vec![sum];
+        values
     }
 }
 
