@@ -8,7 +8,7 @@ use ys_differential_evolution::population::{individual::*, *};
 pub struct  Item {
     pub value: usize,
     pub weight: usize,
-    pub maximum_count: usize,
+    pub stock: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -21,13 +21,13 @@ pub struct Knapsack {
 fn convert(items: &Vec<Item>, genes: &Vec<f32>) -> Vec<usize> {
     let mut converted = Vec::with_capacity(genes.len());
     
-    // [0.0, 1.0]の区間を(item.maximum_count + 1)で均等に割り、
+    // [0.0, 1.0]の区間を(item.stock + 1)で均等に割り、
     // それぞれの区間を個数に変換する
     for (item, gene) in items.iter().zip(genes) {
-        let per_count = 1.0 / (item.maximum_count + 1) as f32;
+        let per_count = 1.0 / (item.stock + 1) as f32;
         let mut count = (gene / per_count) as usize;
-        if count > item.maximum_count {
-            count = item.maximum_count;
+        if count > item.stock {
+            count = item.stock;
         }
         converted.push(count);
     }
@@ -59,16 +59,16 @@ impl IndividualBaseEach<f32> for Knapsack
         Self { 
             genes: Vec::new(),
             items: vec![
-                Item { value: 10, weight: 1,  maximum_count: 10000 },
-                Item { value: 9,  weight: 2,  maximum_count: 10000 },
-                Item { value: 8,  weight: 3,  maximum_count: 10000 },
-                Item { value: 7,  weight: 4,  maximum_count: 10000 },
-                Item { value: 6,  weight: 5,  maximum_count: 10000 },
-                Item { value: 5,  weight: 6,  maximum_count: 10000 },
-                Item { value: 4,  weight: 7,  maximum_count: 10000 },
-                Item { value: 3,  weight: 8,  maximum_count: 10000 },
-                Item { value: 2,  weight: 9,  maximum_count: 10000 },
-                Item { value: 1,  weight: 10, maximum_count: 10000 },
+                Item { value: 10, weight: 1,  stock: 10000 },
+                Item { value: 9,  weight: 2,  stock: 10000 },
+                Item { value: 8,  weight: 3,  stock: 10000 },
+                Item { value: 7,  weight: 4,  stock: 10000 },
+                Item { value: 6,  weight: 5,  stock: 10000 },
+                Item { value: 5,  weight: 6,  stock: 10000 },
+                Item { value: 4,  weight: 7,  stock: 10000 },
+                Item { value: 3,  weight: 8,  stock: 10000 },
+                Item { value: 2,  weight: 9,  stock: 10000 },
+                Item { value: 1,  weight: 10, stock: 10000 },
             ],
             capacity: 111111
         }
