@@ -9,7 +9,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ys_differential_evolution = "0.2"
+ys_differential_evolution = "0.3"
 ```
 
 ## 実行例 Example

@@ -6,73 +6,75 @@ use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 use self::individual::*;
 
-// TF: f32 or f64
-// TI: individual
-// TP: population
-// 
-// 適応型(Adaptive)に対して、普通(Base)を定義
-
-#[derive(Debug, Clone)]
-pub struct BasePopulation<TI> {
-    individuals: Vec<TI>,
+pub struct PopulationMinimum<INDIVIDUAL> {
+    individuals: Vec<INDIVIDUAL>,
 }
 
-pub trait PopulationBaseEach<TI, TF> {
+trait PopulationMinimumBase<INDIVIDUAL, FLOAT> {
     fn new() -> Self;
-    fn get_individuals(&self) -> &Vec<TI>;
-    fn set_individuals(&mut self, individuals: Vec<TI>);
+    fn get_individuals(&self) -> &Vec<INDIVIDUAL>;
+    fn get_individuals_as_mut(&mut self) -> &mut Vec<INDIVIDUAL>;
+    fn set_individuals(&mut self, individuals: Vec<INDIVIDUAL>);
 }
 
-pub trait PopulationBaseInterface<TI, TF> {
-    fn new_from_individuals(individuals: Vec<TI>) -> Self;
+pub trait PopulationMinimumInterface<INDIVIDUAL, FLOAT> {
+    fn new_from_individuals(individuals: Vec<INDIVIDUAL>) -> Self;
     fn new_from_shape(individuals_len: usize, genes_len: usize) -> Self;
     fn show_all(&self);
     fn show_at(&self, index: usize);
     fn show_best_individual(&self);
     fn get_index_best(&self) -> usize;
-    fn get_individual_best(&self) -> &TI;
+    fn get_individual_best(&self) -> &INDIVIDUAL;
+    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<INDIVIDUAL, FLOAT>);
+    fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT, crossover_rate: FLOAT);
 }
 
-trait PopulationBaseEvolutionParts<TI, TF> {
+trait PopulationMinimumEvolution<INDIVIDUAL, FLOAT> {
     fn choice_factor_indexes(&self, count: usize) -> Vec<usize>;
-    fn de_generate_mutant(&self, best_or_rand: &str, difference_vector_count: usize, f_scale: TF) -> TI;
+    fn de_generate_mutant(&self, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT) -> INDIVIDUAL;
 }
 
-pub trait PopulationBaseEvolution<TI, TF> {
-    fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: TF, crossover_rate: TF);
-}
-
-impl<TI: IndividualBaseEach<TF>, TF: Float> PopulationBaseEach<TI, TF> for BasePopulation<TI> {
+impl<INDIVIDUAL, FLOAT> PopulationMinimumBase<INDIVIDUAL, FLOAT> for PopulationMinimum<INDIVIDUAL>
+where
+    INDIVIDUAL: IndividualMinimumBase<FLOAT>,
+    FLOAT: Float,
+{
     fn new() -> Self {
         Self { individuals: Vec::new() }
     }
 
-    fn get_individuals(&self) -> &Vec<TI> {
+    fn get_individuals(&self) -> &Vec<INDIVIDUAL> {
         &self.individuals
     }
 
-    fn set_individuals(&mut self, individuals: Vec<TI>) {
+    fn set_individuals(&mut self, individuals: Vec<INDIVIDUAL>) {
         self.individuals = individuals;
+    }
+
+    fn get_individuals_as_mut(&mut self) -> &mut Vec<INDIVIDUAL> {
+        &mut self.individuals
     }
 }
 
-impl<TP: PopulationBaseEach<TI, TF>, 
-     TI: IndividualBaseEach<TF> + IndividualBaseInterface<TF>, 
-     TF: Float>
-     PopulationBaseInterface<TI, TF> for TP
+impl<POPULATION, INDIVIDUAL, FLOAT> PopulationMinimumInterface<INDIVIDUAL, FLOAT> for POPULATION
+where
+    Standard: Distribution<FLOAT>,
+    POPULATION: PopulationMinimumBase<INDIVIDUAL, FLOAT>,
+    INDIVIDUAL: IndividualMinimumBase<FLOAT> + IndividualMinimumInterface<FLOAT> + IndividualMinimumEvolution<FLOAT>,
+    FLOAT: Float + AddAssign + Debug,
 {
-    fn new_from_individuals(individuals: Vec<TI>) -> Self{
-        let mut population = TP::new();
+    fn new_from_individuals(individuals: Vec<INDIVIDUAL>) -> Self{
+        let mut population = POPULATION::new();
         population.set_individuals(individuals);
         population
     }
 
     fn new_from_shape(individuals_len: usize, genes_len: usize) -> Self {
-        let mut population = TP::new();
+        let mut population = POPULATION::new();
         let mut individuals = Vec::with_capacity(individuals_len);
 
         for _ in 0..individuals_len {
-            individuals.push(TI::new_from_len(genes_len));
+            individuals.push(INDIVIDUAL::new_from_length(genes_len));
         }
         population.set_individuals(individuals);
 
@@ -81,12 +83,12 @@ impl<TP: PopulationBaseEach<TI, TF>,
 
     fn get_index_best(&self) -> usize {
         let mut best_index = 0;
-        let mut best_value = self.get_individuals()[0].evaluate();
+        let mut best_value = self.get_individuals()[0].get_evaluation_values();
 
         for (index, individual) in self.get_individuals().iter().enumerate() {
-            if individual.evaluate() < best_value {
+            if individual.get_evaluation_values() < best_value {
                 best_index = index;
-                best_value = individual.evaluate();
+                best_value = individual.get_evaluation_values();
             }
         }
         best_index
@@ -94,28 +96,52 @@ impl<TP: PopulationBaseEach<TI, TF>,
 
     fn show_all(&self) {
         for individual in self.get_individuals() {
-            individual.show();
+            individual.show_detail();
         }
     }
 
     fn show_at(&self, index: usize) {
-        self.get_individuals()[index].show();
+        self.get_individuals()[index].show_detail();
     }
 
     fn show_best_individual(&self) {
-        self.get_individuals()[self.get_index_best()].show();
+        self.get_individuals()[self.get_index_best()].show_detail();
     }
 
-    fn get_individual_best(&self) -> &TI {
+    fn get_individual_best(&self) -> &INDIVIDUAL {
         &self.get_individuals()[self.get_index_best()]
+    }
+
+    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<INDIVIDUAL, FLOAT>) {
+        for individual in self.get_individuals_as_mut() {
+            individual.set_evaluation_function(evaluation_function)
+        }
+    }
+
+    fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT, crossover_rate: FLOAT) {
+        for individual in self.get_individuals_as_mut() {
+            if individual.get_evaluation_values().len() == 0 {
+                individual.set_evaluation_values(individual.evaluate());
+            }
+        }
+        for _ in 0..epoch {
+            let mut individuals = Vec::with_capacity(self.get_individuals().len());
+            for individual in self.get_individuals() {
+                let mutant = self.de_generate_mutant(best_or_rand, difference_vector_count, f_scale);
+                let trial = individual.bin_cross(mutant, crossover_rate);
+                individuals.push(individual.compete(trial));
+            }
+            self.set_individuals(individuals);
+        }
     }
 }
 
-impl<TP: PopulationBaseEach<TI, TF> + PopulationBaseInterface<TI, TF>, 
-     TI: IndividualBaseEach<TF> + IndividualBaseInterface<TF>, 
-     TF: Float + NumCast + AddAssign + Debug>
-     PopulationBaseEvolutionParts<TI, TF> for TP
-where Standard: Distribution<TF>
+impl<POPULATION, INDIVIDUAL, FLOAT> PopulationMinimumEvolution<INDIVIDUAL, FLOAT> for POPULATION
+where
+    Standard: Distribution<FLOAT>,
+    POPULATION: PopulationMinimumBase<INDIVIDUAL, FLOAT>,
+    INDIVIDUAL: IndividualMinimumBase<FLOAT> + IndividualMinimumInterface<FLOAT> + IndividualMinimumEvolution<FLOAT>,
+    FLOAT: Float + NumCast + AddAssign + Debug,
 {
     fn choice_factor_indexes(&self, count: usize) -> Vec<usize> {
         // 集団全体から個体を選ぶ意味は無いため
@@ -131,7 +157,7 @@ where Standard: Distribution<TF>
 
         factor_indexes
     }
-    fn de_generate_mutant(&self, best_or_rand: &str, difference_vector_count: usize, f_scale: TF) -> TI
+    fn de_generate_mutant(&self, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT) -> INDIVIDUAL
     {
         
         assert!(best_or_rand == "best" || best_or_rand == "rand");
@@ -164,38 +190,14 @@ where Standard: Distribution<TF>
 
                 gene += f_scale * (gene1 - gene2);
             }
-
             // [0.0, 1.0]がパラメータの範囲なため、超えていた場合は範囲内に収まるように修正する
             if gene > num::cast(1.0).unwrap() {
                 gene = num::cast(1.0).unwrap()
             } else if gene < num::cast(0.0).unwrap() {
                 gene = num::cast(0.0).unwrap()
             }
-
             genes.push(gene);
         }
-
-        TI::new_from_genes(genes)
-
-    }
-}
-
-
-
-impl<TP: PopulationBaseEach<TI, TF> + PopulationBaseEvolutionParts<TI, TF>, 
-     TI: IndividualBaseEach<TF> + IndividualBaseInterface<TF> + IndividualBaseEvolutionParts<TF>, 
-     TF: Float>
-     PopulationBaseEvolution<TI, TF> for TP
-{
-    fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: TF, crossover_rate: TF) {
-        for _ in 0..epoch {
-            let mut individuals = Vec::with_capacity(self.get_individuals().len());
-            for individual in self.get_individuals() {
-                let mutant = self.de_generate_mutant(best_or_rand, difference_vector_count, f_scale);
-                let trial = individual.bin_cross(mutant, crossover_rate);
-                individuals.push(individual.compete(trial));
-            }
-            self.set_individuals(individuals);
-        }
+        INDIVIDUAL::new_from_genes(genes)
     }
 }
