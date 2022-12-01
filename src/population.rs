@@ -1,10 +1,8 @@
-pub mod individual;
-
 use std::{fmt::Debug, ops::AddAssign};
 use num::{Float, NumCast};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
-use self::individual::*;
+use crate::individual::*;
 
 pub struct PopulationMinimum<INDIVIDUAL> {
     individuals: Vec<INDIVIDUAL>,

@@ -1,6 +1,6 @@
 // この"use"は必須
 // This "use" is required
-use ys_differential_evolution::population::{individual::*, *};
+use ys_differential_evolution::{population::*, individual::*};
 
 fn main() {
 
