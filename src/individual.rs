@@ -22,6 +22,9 @@ macro_rules! IndividualMinimumImpl {
         fn get_converted_genes(&self) -> &Vec<FLOAT> {
             &self.converted_genes
         }
+        fn set_evaluation_values(&mut self, evaluation_values: Vec<FLOAT>) {
+            self.evaluation_values = evaluation_values;
+        }
         fn get_evaluation_values(&self) -> &Vec<FLOAT> {
             &self.evaluation_values
         }
@@ -38,6 +41,7 @@ pub trait IndividualMinimumBase<FLOAT>
     fn get_converted_genes(&self) -> &Vec<FLOAT>;
     /// 評価値は高い方が良い
     fn evaluate(&mut self);
+    fn set_evaluation_values(&mut self, evaluation_values: Vec<FLOAT>);
     fn get_evaluation_values(&self) -> &Vec<FLOAT>;  
 }
 
@@ -108,8 +112,6 @@ where
             genes.push(gene);
         }
         another.set_genes(genes);
-        another.convert();
-        another.evaluate();
         another
     }
     /// 個体を評価し、比較する
