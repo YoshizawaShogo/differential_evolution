@@ -7,14 +7,25 @@ use std::{fmt::Debug};
 use num::Float;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
-pub type EvaluationFunctionType<INDIVIDUAL, FLOAT> = fn(&INDIVIDUAL) -> Vec<FLOAT>;
-
-#[derive(Clone)]
-pub struct IndividualMinimum<FLOAT = f32> 
-{
-    genes: Vec<FLOAT>,
-    evaluation_values: Vec<FLOAT>,
-    evaluation_function: EvaluationFunctionType<Self, FLOAT>
+#[macro_export]
+macro_rules! IndividualMinimumImpl {
+    () => {
+        fn new() -> Self {
+            Self { genes: Vec::new(), evaluation_values: Vec::new(), converted_genes: Vec::new()}
+        }
+        fn set_genes(&mut self, genes: Vec<FLOAT>) {
+            self.genes = genes;
+        }
+        fn get_genes(&self) -> &Vec<FLOAT> {
+            &self.genes
+        }
+        fn get_converted_genes(&self) -> &Vec<FLOAT> {
+            &self.converted_genes
+        }
+        fn get_evaluation_values(&self) -> &Vec<FLOAT> {
+            &self.evaluation_values
+        }
+    };
 }
 
 pub trait IndividualMinimumBase<FLOAT>
@@ -22,10 +33,12 @@ pub trait IndividualMinimumBase<FLOAT>
     fn new() -> Self;
     fn set_genes(&mut self, genes: Vec<FLOAT>);
     fn get_genes(&self) -> &Vec<FLOAT>;
-    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<Self, FLOAT>);
-    fn get_evaluation_function(&self) -> &EvaluationFunctionType<Self, FLOAT>;
-    fn set_evaluation_values(&mut self, evaluation_values: Vec<FLOAT>);    
-    fn get_evaluation_values(&self) -> &Vec<FLOAT>;    
+    /// evaluateのための前処理
+    fn convert(&mut self);
+    fn get_converted_genes(&self) -> &Vec<FLOAT>;
+    /// 評価値は高い方が良い
+    fn evaluate(&mut self);
+    fn get_evaluation_values(&self) -> &Vec<FLOAT>;  
 }
 
 pub(super) trait IndividualMinimumInterface<FLOAT>
@@ -37,36 +50,8 @@ pub(super) trait IndividualMinimumInterface<FLOAT>
 
 pub(super) trait IndividualMinimumEvolution<FLOAT>
 {
-    fn evaluate(&self) -> Vec<FLOAT>;
     fn bin_cross(&self, another: Self, crossover_rate: FLOAT) -> Self;
     fn compete(&self, another: Self) -> Self;
-}
-
-impl<FLOAT> IndividualMinimumBase<FLOAT> for IndividualMinimum<FLOAT>
-where
-    FLOAT: Float,
-{
-    fn new() -> Self {
-        Self { genes: Vec::new(), evaluation_values: Vec::new(), evaluation_function: |_| Vec::new()}
-    }
-    fn set_genes(&mut self, genes: Vec<FLOAT>) {
-        self.genes = genes;
-    }
-    fn get_genes(&self) -> &Vec<FLOAT> {
-        &self.genes
-    }
-    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<Self, FLOAT>) {
-        self.evaluation_function = evaluation_function;
-    }
-    fn get_evaluation_function(&self) -> &EvaluationFunctionType<Self, FLOAT>{
-        &self.evaluation_function
-    }
-    fn set_evaluation_values(&mut self, evaluation_values: Vec<FLOAT>) {
-        self.evaluation_values = evaluation_values;
-    }
-    fn get_evaluation_values(&self) -> &Vec<FLOAT> {
-        &self.evaluation_values
-    }
 }
 
 impl<INDIVIDUAL, FLOAT> IndividualMinimumInterface<FLOAT> for INDIVIDUAL
@@ -93,6 +78,7 @@ where
     }
     fn show_detail(&self) {
         println!("Genes {:?}", self.get_genes());
+        println!("Converted {:?}", self.get_converted_genes());
         println!("Evaluation {:?}", self.get_evaluation_values());
     }
 }
@@ -103,10 +89,6 @@ where
     INDIVIDUAL: IndividualMinimumBase<FLOAT> + IndividualMinimumInterface<FLOAT> + Clone,
     FLOAT: Float + Debug,
 {
-    fn evaluate(&self) -> Vec<FLOAT>{
-        let evaluation_values = (self.get_evaluation_function())(self);
-        evaluation_values
-    }
     /// 二項交叉
     fn bin_cross(&self, mut another: Self, crossover_rate: FLOAT) -> Self {
         let mut random_generator = rand::thread_rng();
@@ -126,21 +108,19 @@ where
             genes.push(gene);
         }
         another.set_genes(genes);
-        another.set_evaluation_function(*self.get_evaluation_function());
-        another.set_evaluation_values(another.evaluate());
+        another.convert();
+        another.evaluate();
         another
     }
     /// 個体を評価し、比較する
-    /// 
-    /// 評価値が小さい個体の方が良い個体と定義
+    /// 評価値が高い個体の方が良い個体と定義
     fn compete(&self, another: Self) -> Self {
         let self_values = self.get_evaluation_values();
         let another_values = another.get_evaluation_values();
-
         for (self_value, another_value) in self_values.iter().zip(another_values) {
-            if self_value > another_value {
+            if self_value < another_value {
                 return another;
-            } else if self_value < another_value {
+            } else if self_value > another_value {
                 return self.clone();
             }
         }
@@ -148,5 +128,3 @@ where
     }
     
 }
-
-// TODO: Comment, inlineなどを使った高速化

@@ -1,3 +1,8 @@
+//! FLOAT: f32 or f64
+//! INDIVIDUAL: individual
+//! 
+//! 適応型(Adaptive)に対して、最小限(Minimum)を定義
+
 use std::{fmt::Debug, ops::AddAssign};
 use num::{Float, NumCast};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
@@ -23,7 +28,6 @@ pub trait PopulationMinimumInterface<INDIVIDUAL, FLOAT> {
     fn show_best_individual(&self);
     fn get_index_best(&self) -> usize;
     fn get_individual_best(&self) -> &INDIVIDUAL;
-    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<INDIVIDUAL, FLOAT>);
     fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT, crossover_rate: FLOAT);
 }
 
@@ -110,16 +114,11 @@ where
         &self.get_individuals()[self.get_index_best()]
     }
 
-    fn set_evaluation_function(&mut self, evaluation_function: EvaluationFunctionType<INDIVIDUAL, FLOAT>) {
-        for individual in self.get_individuals_as_mut() {
-            individual.set_evaluation_function(evaluation_function)
-        }
-    }
-
     fn advance_epoch(&mut self, epoch: usize, best_or_rand: &str, difference_vector_count: usize, f_scale: FLOAT, crossover_rate: FLOAT) {
         for individual in self.get_individuals_as_mut() {
             if individual.get_evaluation_values().len() == 0 {
-                individual.set_evaluation_values(individual.evaluate());
+                individual.convert();
+                individual.evaluate()
             }
         }
         for _ in 0..epoch {
