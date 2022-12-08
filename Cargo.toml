@@ -16,4 +16,4 @@ repository = "https://github.com/YoshizawaShogo/differential_evolution"
 [dependencies]
 rand = "0.8"
 num = "0.4"
-ys_simple_db = "0.1.0"
+ys_simple_db = "0.1"

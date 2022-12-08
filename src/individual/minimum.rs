@@ -3,7 +3,7 @@
 //! 
 //! 適応型(Adaptive)に対して、最小限(Minimum)を定義
 
-use std::{fmt::Debug};
+use std::fmt::Debug;
 use num::Float;
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
@@ -45,14 +45,14 @@ pub trait IndividualMinimumBase<FLOAT>
     fn get_evaluation_values(&self) -> &Vec<FLOAT>;  
 }
 
-pub(super) trait IndividualMinimumInterface<FLOAT>
+pub trait IndividualMinimumInterface<FLOAT>
 {
     fn new_from_genes(genes: Vec<FLOAT>) -> Self;
     fn new_from_length(genes_length: usize) -> Self;
     fn show_detail(&self);
 }
 
-pub(super) trait IndividualMinimumEvolution<FLOAT>
+pub trait IndividualMinimumEvolution<FLOAT>
 {
     fn bin_cross(&self, another: Self, crossover_rate: FLOAT) -> Self;
     fn compete(&self, another: Self) -> Self;
