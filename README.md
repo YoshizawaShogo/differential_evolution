@@ -9,13 +9,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ys_differential_evolution = "0.3"
+ys_differential_evolution = "0.4"
 ```
 
 ## 実行例 Example
 
     $ git clone https://github.com/YoshizawaShogo/differential_evolution.git
-    $ git checkout v0.3.0
+    $ git checkout v0.4.0
     $ cd differential_evolution
     $ cargo run --example knapsack --release
 
