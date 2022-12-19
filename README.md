@@ -15,8 +15,8 @@ ys_differential_evolution = "0.5"
 ## 実行例 Example
 
     $ git clone https://github.com/YoshizawaShogo/differential_evolution.git
-    $ git checkout v0.5.0
     $ cd differential_evolution
+    $ git checkout v0.5.0
     $ cargo run --example knapsack --release
 
 ## License
