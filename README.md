@@ -1,7 +1,7 @@
 # 差分進化 Differential evolution
 
-差分進化を実装
-Differential evolution implemented.
+差分進化を実装した。
+すべての関数"y = f(x)"の最小値 or 最大値を求められるはず。
 
 ## 利用方法 Usage
 
@@ -9,13 +9,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ys_differential_evolution = "0.4"
+ys_differential_evolution = "0.5"
 ```
 
 ## 実行例 Example
 
     $ git clone https://github.com/YoshizawaShogo/differential_evolution.git
-    $ git checkout v0.4.0
+    $ git checkout v0.5.0
     $ cd differential_evolution
     $ cargo run --example knapsack --release
 
