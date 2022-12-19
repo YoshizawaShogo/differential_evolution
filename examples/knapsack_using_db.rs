@@ -1,7 +1,7 @@
 use ys_differential_evolution::individual;
 use ys_differential_evolution::populations;
 use ys_differential_evolution::populations::common::*;
-use ys_differential_evolution::populations::minimum::Specific;
+use ys_differential_evolution::populations::using_db::Specific;
 
 type FLOAT = individual::FLOAT;
 type CONVERTED = usize;
@@ -111,7 +111,7 @@ impl individual::Base<CONVERTED> for Individual{
 
 
 fn main() {
-    let mut population = populations::minimum::Population::<Individual>::new_from_shape(20, 10);
+    let mut population = populations::using_db::Population::<Individual>::new_from_shape(20, 10, "for_knapsack.csv");
     population.advance_epoch(1000, "rand", 1, 0.5, 0.5);
     population.show_best_individual();
 }

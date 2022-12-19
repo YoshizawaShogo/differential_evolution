@@ -1,12 +1,12 @@
 use ys_differential_evolution::individual;
 use ys_differential_evolution::populations;
 use ys_differential_evolution::populations::common::*;
-use ys_differential_evolution::populations::minimum::Specific;
+use ys_differential_evolution::populations::using_db::Specific;
 
 type FLOAT = individual::FLOAT;
 type CONVERTED = FLOAT;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Individual
 {
     genes: Vec<FLOAT>,
@@ -49,7 +49,12 @@ impl individual::Base<CONVERTED> for Individual{
 }
 
 fn main() {
-    let mut population = populations::minimum::Population::<Individual>::new_from_shape(20, 10);
-    population.advance_epoch(1000, "rand", 1, 0.5, 0.5);
+    let mut population = populations::using_db::Population::<Individual>::new_from_shape(20, 10, "for_sphere.csv");
+    population.advance_epoch(100, "rand", 1, 0.5, 0.5);
     population.show_best_individual();
+    let db =  population.get_sorted_db();
+    let len = db.len();
+    for i in 0..10 {
+        println!("{}-th best:\t{:?}",i+1, db[len - 1 - i]);
+    }
 }

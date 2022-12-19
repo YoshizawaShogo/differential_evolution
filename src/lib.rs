@@ -1,2 +1,2 @@
-pub mod population;
+pub mod populations;
 pub mod individual;
