@@ -112,6 +112,7 @@ impl individual::Base<CONVERTED> for Individual{
 
 fn main() {
     let mut population = populations::minimum::Population::<Individual>::new_from_shape(20, 10);
-    population.advance_epoch(1000, "rand", 1, 0.5, 0.5);
+    population.advance_epoch(300, "rand", 1, 0.5, 0.5);
+    population.advance_epoch(3, "best", 1, 0.3, 0.9);
     population.show_best_individual();
 }

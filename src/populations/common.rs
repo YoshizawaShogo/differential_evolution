@@ -29,14 +29,14 @@ pub(crate) trait EvolutionParts<INDIVIDUAL, CONVERTED> {
 impl<POPULATION, INDIVIDUAL, CONVERTED> Utility<INDIVIDUAL, CONVERTED> for POPULATION
 where
     POPULATION: GetterSetter<INDIVIDUAL, CONVERTED>,
-    INDIVIDUAL: individual::Base<CONVERTED> + individual::Utility<CONVERTED>,
+    INDIVIDUAL: individual::Base<CONVERTED> + individual::Utility<CONVERTED> + individual::EvolutionParts<CONVERTED>,
 {
     fn get_index_best(&self) -> usize {
         let mut best_index = 0;
         let mut best_value = self.get_individuals()[0].get_evaluation_values();
 
         for (index, individual) in self.get_individuals().iter().enumerate() {
-            if individual.get_evaluation_values() < best_value {
+            if INDIVIDUAL::is_better_than(individual.get_evaluation_values(), best_value) {
                 best_index = index;
                 best_value = individual.get_evaluation_values();
             }
