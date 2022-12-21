@@ -3,7 +3,7 @@ authors = ["Yoshizawa Shogo <shogo.yoshizawa.2000@gmail.com>"]
 description = "Differential evolution implemented."
 
 name = "ys_differential_evolution"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 readme = "README.md"

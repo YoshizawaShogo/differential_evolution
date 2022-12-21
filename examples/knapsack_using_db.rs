@@ -112,11 +112,12 @@ impl individual::Base<CONVERTED> for Individual{
 
 fn main() {
     let mut population = populations::using_db::Population::<Individual>::new_from_shape(20, 10, "for_knapsack.csv");
-    population.advance_epoch(1000, "rand", 1, 0.5, 0.5);
+    population.advance_epoch(300, "rand", 1, 0.5, 0.5);
+    population.advance_epoch(3, "best", 1, 0.3, 0.9);
     population.show_best_individual();
     let db =  population.get_sorted_db();
     let len = db.len();
-    for i in 0..10 {
+    for i in 0..3 {
         println!("{}-th best:\t{:?}",i+1, db[len - 1 - i]);
     }
 }
