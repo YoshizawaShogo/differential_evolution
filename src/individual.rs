@@ -1,130 +1,79 @@
-//! 最小限(Minimum)の機能を実装
-//! 
-//! 例
-//! use a::individuals::minimum;
-//! type FLOAT = minimum::FLOAT;
-//! #[derive(Clone)]
-//! struct Individual
-//! {
-//!     genes: Vec<FLOAT>,
-//!     converted_genes: Vec<FLOAT>,
-//!     evaluation_values: Vec<FLOAT>,
-//! }
+use std::{
+    cmp::Ordering,
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
-use std::fmt::Debug;
-use rand::Rng;
+use rand::{rngs::StdRng, Rng};
 
-pub type FLOAT = f64;
+/// genes --(identificate)--> features --(evaluate)--> evaluations
+pub trait Minimum {
+    /// intermediate representation
+    type Feature: ToString + Display + Debug + PartialEq + FromStr + Clone;
 
-pub trait Base<CONVERTED>
-{
     fn new() -> Self;
-    fn set_genes(&mut self, genes: Vec<FLOAT>);
-    fn get_genes(&self) -> &Vec<FLOAT>;
-    fn set_converted_genes(&mut self, converted_genes: Vec<CONVERTED>);
-    fn get_converted_genes(&self) -> &Vec<CONVERTED>;
-    fn set_evaluation_values(&mut self, evaluation_values: Vec<FLOAT>);
-    fn get_evaluation_values(&self) -> &Vec<FLOAT>; 
-    /// evaluateのための前処理
-    fn convert(&self) -> Vec<CONVERTED>;
-    /// 評価値は高ければ高いほど良い、と定義
-    fn evaluate(&self) -> Vec<FLOAT>;
+    fn set_genes(&mut self, genes: Vec<f64>);
+    fn get_genes(&self) -> &Vec<f64>;
+    fn set_features(&mut self, features: Vec<Self::Feature>);
+    fn get_features(&self) -> &Vec<Self::Feature>;
+    fn set_evaluations(&mut self, evaluations: Vec<f64>);
+    fn get_evaluations(&self) -> &Vec<f64>;
+
+    fn identificate(&self) -> Vec<Self::Feature>;
+    fn evaluate(&self) -> Vec<f64>;
 }
 
-pub trait Utility<CONVERTED> // 形を揃えるためだけに、"CONVERTED"を使用。
-{
-    fn new_from_genes(genes: Vec<FLOAT>) -> Self;
-    fn new_from_length(genes_length: usize) -> Self;
-    fn convert_and_set(&mut self);
-    fn evaluate_and_set(&mut self);
-    fn show_detail(&self);
+pub trait ExtMinimum: Minimum {
+    fn from_genes(gene: Vec<f64>) -> Self;
+    fn from_length(length: usize, random_generator: &mut StdRng) -> Self;
+
+    fn is_better_than(&self, another: &Self) -> bool;
+    fn cross(&self, another: &Self, own_ratio: f64, random_generator: &mut StdRng) -> Self;
 }
 
-pub trait EvolutionParts<CONVERTED> // 形を揃えるためだけに、"CONVERTED"を使用。
-{
-    fn bin_cross(&self, another: Self, crossover_rate: FLOAT) -> Self;
-    fn is_better_than(value_1: &Vec<FLOAT>, value_2: &Vec<FLOAT>) -> bool;
-    fn compete(&self, another: Self) -> Self;
-}
-
-impl<INDIVIDUAL, CONVERTED> Utility<CONVERTED> for INDIVIDUAL
+impl<I> ExtMinimum for I
 where
-    INDIVIDUAL: Base<CONVERTED>,
-    CONVERTED: Debug
+    I: Minimum,
 {
-    fn new_from_genes(genes: Vec<FLOAT>) -> Self {
-        let mut individual = Self::new();
-        individual.set_genes(genes);
-        individual
+    fn from_genes(gene: Vec<f64>) -> Self {
+        let mut indi = Self::new();
+        indi.set_genes(gene);
+        indi
     }
-    fn new_from_length(genes_length: usize) -> Self {
-        let mut random_generator = rand::thread_rng();
-
-        let mut individual = INDIVIDUAL::new();
-        let mut genes = Vec::with_capacity(genes_length);
-        for _ in 0..genes_length {
-            genes.push(random_generator.gen());
+    fn from_length(length: usize, random_generator: &mut StdRng) -> Self {
+        let mut gene = vec![];
+        for _ in 0..length {
+            gene.push(random_generator.gen());
         }
-        individual.set_genes(genes);
-        individual
+        Self::from_genes(gene)
     }
-    fn convert_and_set(&mut self) {
-        self.set_converted_genes(self.convert());
+    fn is_better_than(&self, another: &Self) -> bool {
+        let self_eval = self.get_evaluations();
+        let another_eval = another.get_evaluations();
+        match self_eval.partial_cmp(another_eval).unwrap() {
+            Ordering::Greater | Ordering::Equal => true,
+            Ordering::Less => false,
+        }
     }
-    fn evaluate_and_set(&mut self) {
-        self.set_evaluation_values(self.evaluate());
-    }
-    fn show_detail(&self) {
-        println!("Genes {:?}", self.get_genes());
-        println!("Converted {:?}", self.get_converted_genes());
-        println!("Evaluation {:?}", self.get_evaluation_values());
-    }
-}
+    fn cross(&self, another: &Self, own_ratio: f64, random_generator: &mut StdRng) -> Self {
+        debug_assert!(0.0 <= own_ratio && own_ratio < 1.0);
 
-impl<INDIVIDUAL, CONVERTED> EvolutionParts<CONVERTED> for INDIVIDUAL
-where
-    INDIVIDUAL: Base<CONVERTED> + Clone
-{
-    /// 二項交叉
-    fn bin_cross(&self, mut another: Self, crossover_rate: FLOAT) -> Self {
-        let mut random_generator = rand::thread_rng();
+        let gene_len = self.get_genes().len();
+        let must_choose_another = random_generator.gen_range(0..gene_len);
+        let mut new_genes = Vec::with_capacity(gene_len);
 
-        // 必ず一つは親個体以外(Another)から遺伝
-        let necessary_one = random_generator.gen_range(0..self.get_genes().len());
-
-        let genes_len = self.get_genes().len();
-        let mut genes = Vec::with_capacity(genes_len);
-
-        for i in 0..genes_len {
-            let gene = if random_generator.gen::<FLOAT>() < crossover_rate || i == necessary_one {
+        for i in 0..gene_len {
+            let gene: f64 = if random_generator.gen::<f64>() < own_ratio || i == must_choose_another
+            {
                 another.get_genes()[i]
             } else {
                 self.get_genes()[i]
             };
-            genes.push(gene);
+            new_genes.push(gene);
         }
-        another.set_genes(genes);
-        another
-    }
-    /// 個体を評価し、比較する
-    /// 評価値が高い個体の方が良い個体と定義
-    fn is_better_than(value_1: &Vec<FLOAT>, value_2: &Vec<FLOAT>) -> bool {
-        for (value_1, value_2) in value_1.iter().zip(value_2) {
-            if value_1 < value_2 {
-                return false;
-            } else if value_1 > value_2 {
-                return true;
-            }
-        }
-        true // すべてが等しい場合、とりあえずtrue
-    }
-    fn compete(&self, another: Self) -> Self {
-        let self_values = self.get_evaluation_values();
-        let another_values = another.get_evaluation_values();
-        if Self::is_better_than(&self_values, &another_values) {
-            self.clone()
-        } else {
-            another
-        }
+
+        let mut individual = Self::from_genes(new_genes);
+        individual.set_features(individual.identificate());
+        individual
     }
 }
