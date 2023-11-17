@@ -2,16 +2,15 @@ use serde::{Deserialize, Serialize};
 use ys_differential_evolution::group;
 use ys_differential_evolution::group::*;
 use ys_differential_evolution::individual;
-use ys_differential_evolution::method::ExtMemoizationDE;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 struct Item {
     value: u64,
     weight: u64,
     stock: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 struct Knapsack {
     capacity: u64,
     items: Vec<Item>,
@@ -37,7 +36,7 @@ impl Knapsack {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Individual {
     pub genes: Vec<f64>,
     pub features: Vec<u64>,
@@ -106,7 +105,7 @@ impl individual::Minimum for Individual {
 
         let mut evals = vec![];
         if weight_sum <= capacity as f64{
-            evals.push(f64::INFINITY);
+            evals.push(f64::MAX);
         } else {
             evals.push(-weight_sum);
         }
@@ -116,7 +115,8 @@ impl individual::Minimum for Individual {
 }
 
 #[test]
-fn knapsack() {
+fn knapsack_default() {
+    use ys_differential_evolution::method::ExtMemoizationDE;
     let knapsack = Knapsack::new();
     println!("{:#?}", knapsack);
 
@@ -127,4 +127,29 @@ fn knapsack() {
     g.advance_epoch(5, "best", 1, 0.8, 0.8);
     g.advance_epoch(5, "best", 1, 0.3, 0.3);
     println!("{:#?}", g.get_best().1);
+}
+
+#[test]
+fn knapsack_save_load() {
+    use ys_differential_evolution::method::ExtMemoizationDE;
+    let knapsack = Knapsack::new();
+
+    let kind_of_item = knapsack.items.len();
+    let mut g = group::Group::<Individual>::from_shape(10, kind_of_item, 0);
+    g.advance_epoch(100, "rand", 1, 0.8, 0.8);
+    g.advance_epoch(100, "rand", 1, 0.5, 0.5);
+    g.advance_epoch(5, "best", 1, 0.8, 0.8);
+    g.advance_epoch(5, "best", 1, 0.3, 0.3);
+
+    let csv = "knapsack_memo.csv";
+    let json = "knapsack_gene.json";
+
+    g.save_memo_to_csv(csv);
+    g.save_to_json(json);
+
+    let mut g = group::Group::<Individual>::load_from_json(json, 0);
+    g.load_memo_from_csv(csv);
+    println!("{:#?}", g.get_best().1);
+    println!("memo: {:#?}", g.get_sorted_memo()[0]);
+    println!("memo_len: {:#?}", g.get_sorted_memo().len());
 }

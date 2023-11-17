@@ -198,6 +198,7 @@ where
     fn get_sorted_memo(&self) -> Vec<(String, Vec<f64>)> {
         let mut vec_memo = Vec::from_iter(self.memo_as_ref().clone());
         vec_memo.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        vec_memo.reverse();
         vec_memo
     }
 }
