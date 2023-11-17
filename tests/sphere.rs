@@ -50,7 +50,7 @@ impl individual::Minimum for Car {
         self.genes
             .iter()
             .clone()
-            .map(|x| ((*x - 0.5) * 1000.0).round() / 1000.0)
+            .map(|x| ((*x - 0.5) * 1000.0).round().abs() / 1000.0)
             .collect()
     }
 
@@ -62,9 +62,6 @@ impl individual::Minimum for Car {
 #[test]
 fn sphere() {
     let mut g = group::Group::<Car>::from_shape(10, 10, 0);
-    println!("{:#?}", g.get_best().1);
     g.advance_epoch(100, "rand", 1, 0.5, 0.5);
     println!("{:#?}", g.get_best().1);
-
-    // assert!(false);
 }

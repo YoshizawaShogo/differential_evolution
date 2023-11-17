@@ -2,7 +2,7 @@
 
 差分進化を実装した。
 
-すべての関数 "y = f(x)" の 最小値に近い"x" or 最大値に近い"x" を求められるはず。
+すべての関数 "y = f(x)" の 最小値に近い"x" or 最大値に近い"x" を求められる、、はず
 
 ## 利用方法 Usage
 
@@ -17,8 +17,7 @@ ys_differential_evolution = "0.5"
 
     $ git clone https://github.com/YoshizawaShogo/differential_evolution.git
     $ cd differential_evolution
-    $ git checkout v0.5.0
-    $ cargo run --example knapsack --release
+    $ cargo test -- --nocapture
 
 ## License
 

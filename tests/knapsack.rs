@@ -20,7 +20,7 @@ struct Knapsack {
 impl Knapsack {
     fn new() -> Self{
         Self { 
-            capacity: 5000,
+            capacity: 11000,
             items: vec![
                 Item { value: 10, weight: 1,  stock: 10000 },
                 Item { value: 9,  weight: 2,  stock: 10000 },
@@ -117,10 +117,14 @@ impl individual::Minimum for Individual {
 
 #[test]
 fn knapsack() {
-    let kind_of_item = Knapsack::new().items.len();
-    let mut g = group::Group::<Individual>::from_shape(100, kind_of_item, 0);
-    g.advance_epoch(200, "rand", 1, 0.5, 0.5);
-    g.advance_epoch(5, "best", 1, 0.5, 0.5);
+    let knapsack = Knapsack::new();
+    println!("{:#?}", knapsack);
+
+    let kind_of_item = knapsack.items.len();
+    let mut g = group::Group::<Individual>::from_shape(10, kind_of_item, 0);
+    g.advance_epoch(100, "rand", 1, 0.8, 0.8);
+    g.advance_epoch(100, "rand", 1, 0.5, 0.5);
+    g.advance_epoch(5, "best", 1, 0.8, 0.8);
+    g.advance_epoch(5, "best", 1, 0.3, 0.3);
     println!("{:#?}", g.get_best().1);
-    // assert!(false)
 }

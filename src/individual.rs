@@ -55,15 +55,15 @@ where
             Ordering::Less => false,
         }
     }
-    fn cross(&self, another: &Self, own_ratio: f64, random_generator: &mut StdRng) -> Self {
-        debug_assert!(0.0 <= own_ratio && own_ratio < 1.0);
+    fn cross(&self, another: &Self, another_ratio: f64, random_generator: &mut StdRng) -> Self {
+        debug_assert!(0.0 <= another_ratio && another_ratio < 1.0);
 
         let gene_len = self.get_genes().len();
         let must_choose_another = random_generator.gen_range(0..gene_len);
         let mut new_genes = Vec::with_capacity(gene_len);
 
         for i in 0..gene_len {
-            let gene: f64 = if random_generator.gen::<f64>() < own_ratio || i == must_choose_another
+            let gene: f64 = if random_generator.gen::<f64>() <= another_ratio || i == must_choose_another
             {
                 another.get_genes()[i]
             } else {
